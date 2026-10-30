@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="FModel.Android.MainView">
+  <Grid Margin="16"
+        RowDefinitions="Auto,Auto,Auto,Auto,*">
+    <StackPanel Grid.Row="0"
+                Spacing="8">
+      <TextBlock Text="FModel"
+                 FontSize="28"
+                 FontWeight="Bold" />
+      <Button x:Name="PickPackageButton"
+              Content="Pak seç"
+              HorizontalAlignment="Stretch"
+              Click="PickPackageFolder_OnClick" />
+      <TextBlock Text="SAF klasörünü seçin; pak ve .utoc dosyalarına ait .ucas parçaları geçici uygulama önbelleğine kopyalanır."
+                 TextWrapping="Wrap" />
+    </StackPanel>
+
+    <TextBlock x:Name="StatusText"
+               Grid.Row="1"
+               Margin="0,12,0,8"
+               Text="Bir klasör seçerek .pak veya .utoc dosyası açın."
+               TextWrapping="Wrap" />
+
+    <Grid Grid.Row="2"
+          ColumnDefinitions="*,Auto"
+          Margin="0,0,0,8">
+      <ComboBox x:Name="PackageComboBox"
+                Grid.Column="0"
+                PlaceholderText="Klasördeki pak dosyaları"
+                DisplayMemberBinding="{Binding Name}" />
+      <Button x:Name="OpenPackageButton"
+              Grid.Column="1"
+              Margin="8,0,0,0"
+              Content="Aç"
+              Click="OpenPackage_OnClick" />
+    </Grid>
+
+    <TextBox x:Name="SearchBox"
+             Grid.Row="3"
+             Margin="0,0,0,8"
+             Watermark="Dosya yollarında ara"
+             IsEnabled="False"
+             TextChanged="SearchBox_OnTextChanged" />
+
+    <ListBox x:Name="FilesListBox"
+             Grid.Row="4" />
+  </Grid>
+</UserControl>

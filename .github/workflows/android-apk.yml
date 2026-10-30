@@ -1,0 +1,45 @@
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install Android workload
+        run: dotnet workload install android
+
+      - name: Publish APK
+        run: >-
+          dotnet publish FModel.Android/FModel.Android.csproj
+          --configuration Release
+          --framework net8.0-android
+          --output artifacts/android-apk
+          -p:AndroidPackageFormat=apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: fmodel-android-apk
+          path: artifacts/android-apk/*.apk
+          if-no-files-found: error
