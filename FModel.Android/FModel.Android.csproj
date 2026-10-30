@@ -4,6 +4,10 @@
     <TargetFramework>net8.0-android</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <CheckEolWorkload>false</CheckEolWorkload>
+    <CheckEolWorkloads>false</CheckEolWorkloads>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NETSDK1202</WarningsNotAsErrors>
     <ApplicationId>com.fmodel.android</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>

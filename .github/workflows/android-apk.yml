@@ -32,10 +32,11 @@ jobs:
       - name: Publish APK
         run: >-
           dotnet publish FModel.Android/FModel.Android.csproj
-          --configuration Release
-          --framework net8.0-android
-          --output artifacts/android-apk
+          -c Release
+          -f net8.0-android
+          -o artifacts/android-apk
           -p:AndroidPackageFormat=apk
+          -v:n
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
