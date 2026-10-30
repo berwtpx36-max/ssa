@@ -10,6 +10,8 @@ public partial class App : Avalonia.Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        CrashLogger.Initialize();
+
         if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewLifetime)
         {
             singleViewLifetime.MainView = new MainView();

@@ -21,15 +21,15 @@ public partial class MainView : UserControl
 
     private async void PickPackageFolder_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        var storageProvider = TopLevel.GetTopLevel(this)?.StorageProvider;
-        if (storageProvider is null)
-        {
-            StatusText.Text = "Dosya sağlayıcısı kullanılamıyor.";
-            return;
-        }
-
         try
         {
+            var storageProvider = TopLevel.GetTopLevel(this)?.StorageProvider;
+            if (storageProvider is null)
+            {
+                StatusText.Text = "Dosya sağlayıcısı kullanılamıyor.";
+                return;
+            }
+
             var folders = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
                 AllowMultiple = false,
@@ -64,33 +64,31 @@ public partial class MainView : UserControl
         }
         catch (Exception exception)
         {
-            StatusText.Text = $"Klasör okunamadı: {exception.Message}";
+            ShowException("Klasör okunamadı", exception);
         }
     }
 
     private async void OpenPackage_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        if (PackageComboBox.SelectedItem is not PackageChoice package)
-        {
-            StatusText.Text = "Önce açılacak bir .pak veya .utoc dosyası seçin.";
-            return;
-        }
-
-        var cacheRoot = global::Android.App.Application.Context.CacheDir?.AbsolutePath;
-        if (string.IsNullOrWhiteSpace(cacheRoot))
-        {
-            StatusText.Text = "Uygulama önbelleği kullanılamıyor.";
-            return;
-        }
-
-        var stagingDirectory = Path.Combine(cacheRoot, "archives", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(stagingDirectory);
-        OpenPackageButton.IsEnabled = false;
-        PickPackageButton.IsEnabled = false;
-        StatusText.Text = "Pak ve gerekli eşlikçi dosyalar uygulama önbelleğine kopyalanıyor…";
-
+        string? stagingDirectory = null;
         try
         {
+            if (PackageComboBox.SelectedItem is not PackageChoice package)
+            {
+                StatusText.Text = "Önce açılacak bir .pak veya .utoc dosyası seçin.";
+                return;
+            }
+
+            var cacheRoot = global::Android.App.Application.Context.CacheDir?.AbsolutePath;
+            if (string.IsNullOrWhiteSpace(cacheRoot))
+                throw new InvalidOperationException("Uygulama önbelleği kullanılamıyor.");
+
+            stagingDirectory = Path.Combine(cacheRoot, "archives", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(stagingDirectory);
+            OpenPackageButton.IsEnabled = false;
+            PickPackageButton.IsEnabled = false;
+            StatusText.Text = "Pak ve gerekli eşlikçi dosyalar uygulama önbelleğine kopyalanıyor…";
+
             var stagedPath = await StagePackageAsync(package, stagingDirectory);
             StatusText.Text = "Arşiv okunuyor…";
             var files = await Task.Run(() => ReadArchivePaths(stagedPath));
@@ -103,30 +101,23 @@ public partial class MainView : UserControl
                 ? "Arşiv açıldı ancak listelenebilir dosya yolu bulunamadı."
                 : $"{files.Count:N0} dosya yolu yüklendi.";
         }
-        catch (OodleException exception)
-        {
-            _archivePaths = [];
-            FilesListBox.ItemsSource = null;
-            SearchBox.IsEnabled = false;
-            StatusText.Text = $"Oodle desteklenmiyor: {exception.Message}";
-        }
         catch (Exception exception)
         {
             _archivePaths = [];
             FilesListBox.ItemsSource = null;
             SearchBox.IsEnabled = false;
-            StatusText.Text = $"Arşiv açılamadı: {exception.Message}";
+            ShowException("Pak kopyalama/açma başarısız", exception);
         }
         finally
         {
             try
             {
-                if (Directory.Exists(stagingDirectory))
+                if (stagingDirectory is not null && Directory.Exists(stagingDirectory))
                     Directory.Delete(stagingDirectory, recursive: true);
             }
             catch (Exception exception)
             {
-                StatusText.Text += $" Geçici dosyalar silinemedi: {exception.Message}";
+                ShowException("Geçici dosyalar silinemedi", exception);
             }
 
             OpenPackageButton.IsEnabled = true;
@@ -191,6 +182,12 @@ public partial class MainView : UserControl
 
     private static bool HasExtension(string fileName, string extension) =>
         string.Equals(Path.GetExtension(fileName), extension, StringComparison.OrdinalIgnoreCase);
+
+    private void ShowException(string operation, Exception exception)
+    {
+        var details = CrashLogger.LogException(operation, exception);
+        StatusText.Text = $"{operation}:{Environment.NewLine}{details}";
+    }
 
     private sealed record PackageChoice(string Name, IStorageFile File);
 }
